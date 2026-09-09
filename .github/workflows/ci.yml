@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, homolog, main]
+  pull_request:
+    branches: [develop, homolog, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  repository-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate repository documentation
+        shell: bash
+        run: test -s README.md
+
