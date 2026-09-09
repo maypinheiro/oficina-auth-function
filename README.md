@@ -42,3 +42,9 @@ O código funcional será implementado na etapa de autenticação serverless. O
 workflow atual valida o scaffold e será ampliado com testes e deploy AWS via
 OIDC.
 
+## Limitações do Learner Lab
+
+A implantação ocorrerá na conta AWS Academy Learner Lab `982623100545`. Lambda,
+API Gateway, Cognito, Secrets Manager e criação de roles precisam ser validados
+na sessão real. OIDC é preferível; se estiver bloqueado, o workflow usará apenas
+credenciais temporárias armazenadas em GitHub Environments.
