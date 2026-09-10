@@ -93,3 +93,33 @@ variable "tags" {
     ManagedBy = "terraform"
   }
 }
+
+variable "datadog_lambda_layer_arn" {
+  description = "ARN versionado da Datadog Lambda Library para Node.js."
+  type        = string
+}
+
+variable "datadog_extension_layer_arn" {
+  description = "ARN versionado da Datadog Lambda Extension."
+  type        = string
+}
+
+variable "datadog_api_key_secret_arn" {
+  description = "Secret ARN contendo a API key do Datadog."
+  type        = string
+  sensitive   = true
+}
+
+variable "datadog_site" {
+  type    = string
+  default = "datadoghq.com"
+}
+
+variable "trace_sample_rate" {
+  type    = number
+  default = 1
+  validation {
+    condition     = var.trace_sample_rate >= 0 && var.trace_sample_rate <= 1
+    error_message = "trace_sample_rate deve estar entre 0 e 1."
+  }
+}
