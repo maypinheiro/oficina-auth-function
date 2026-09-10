@@ -73,6 +73,24 @@ npm run package
 
 O ZIP gerado fica em `artifact/oficina-auth.zip` e não é versionado.
 
+## API Gateway e protecao das rotas
+
+O Terraform cria uma HTTP API com os seguintes acessos:
+
+| Rota | Autorizacao | Destino |
+| --- | --- | --- |
+| `POST /auth/clientes` | publica | Lambda de autenticacao |
+| `GET /health` | publica | API no EKS via VPC Link |
+| `GET /docs` e subrotas | publica | API no EKS via VPC Link |
+| `POST /auth` | publica temporaria | login administrativo legado |
+| `/public/*` | publica | consulta de OS e resposta de orcamento |
+| demais rotas (`$default`) | JWT RS256 obrigatorio | Lambda Authorizer e API no EKS |
+
+O backend nao fica exposto diretamente: o Gateway alcanca o listener privado por
+VPC Link. O stage aplica throttling e envia logs estruturados ao CloudWatch sem
+registrar o cabecalho `Authorization`. As origens CORS devem ser informadas por
+ambiente; em producao nao deve ser usado curinga.
+
 ## Segredos esperados
 
 - banco: JSON com `DATABASE_URL` e `caPem` do bundle CA do Amazon RDS;
