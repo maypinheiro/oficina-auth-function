@@ -36,20 +36,20 @@ jobs:
       TF_VAR_datadog_extension_layer_arn: ${{ vars.DATADOG_EXTENSION_LAYER_ARN }}
       TF_VAR_datadog_api_key_secret_arn: ${{ secrets.DATADOG_API_KEY_SECRET_ARN }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm run lint && npm run typecheck && npm test && npm run package
       - name: Export artifact hash
         run: echo "TF_VAR_source_code_hash=$(openssl dgst -sha256 -binary artifact/oficina-auth.zip | openssl base64 -A)" >> "$GITHUB_ENV"
-      - uses: aws-actions/configure-aws-credentials@v5
+      - uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with: { terraform_version: 1.6.6 }
       - name: Plan
         working-directory: infra
@@ -65,7 +65,7 @@ jobs:
           ENDPOINT=$(terraform output -raw api_gateway_endpoint)
           curl --fail --request POST "$ENDPOINT/auth/clientes" --header 'content-type: application/json' --data "{\"cpf\":\"$SMOKE_TEST_CPF\"}"
           terraform output -json > deployment-outputs.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: auth-deployment-${{ inputs.environment }}-${{ github.sha }}
           path: infra/deployment-outputs.json
