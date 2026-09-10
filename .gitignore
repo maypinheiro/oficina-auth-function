@@ -1,6 +1,7 @@
 node_modules/
 dist/
 coverage/
+artifact/
 .terraform/
 *.tfstate
 *.tfstate.*
@@ -8,4 +9,4 @@ coverage/
 .env.*
 !.env.example
 *.log
-
+*.tfplan
