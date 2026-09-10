@@ -1,12 +1,14 @@
 export type LogLevel = "info" | "warn" | "error";
 
 export function log(level: LogLevel, message: string, fields: Record<string, unknown> = {}): void {
+  const traceId = process.env.DD_TRACE_ID || process.env._X_AMZN_TRACE_ID;
   const entry = {
     timestamp: new Date().toISOString(),
     level,
     service: process.env.DD_SERVICE ?? "oficina-auth",
     env: process.env.DD_ENV ?? "local",
     message,
+    traceId,
     ...fields
   };
   const line = JSON.stringify(entry);
