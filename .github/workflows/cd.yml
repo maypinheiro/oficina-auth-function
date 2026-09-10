@@ -1,0 +1,71 @@
+name: Deploy Functions and Gateway
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        required: true
+        type: choice
+        options: [hml, prod]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oficina-auth-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+      TF_VAR_environment: ${{ inputs.environment }}
+      TF_VAR_lambda_role_arn: arn:aws:iam::982623100545:role/LabRole
+      TF_VAR_private_subnet_ids: ${{ secrets.PRIVATE_SUBNET_IDS_JSON }}
+      TF_VAR_lambda_security_group_ids: ${{ secrets.LAMBDA_SECURITY_GROUP_IDS_JSON }}
+      TF_VAR_vpc_link_subnet_ids: ${{ secrets.PRIVATE_SUBNET_IDS_JSON }}
+      TF_VAR_vpc_link_security_group_ids: ${{ secrets.VPC_LINK_SECURITY_GROUP_IDS_JSON }}
+      TF_VAR_database_secret_arn: ${{ secrets.DATABASE_SECRET_ARN }}
+      TF_VAR_jwt_private_key_secret_arn: ${{ secrets.JWT_PRIVATE_KEY_SECRET_ARN }}
+      TF_VAR_jwt_public_key_base64: ${{ secrets.JWT_PUBLIC_KEY_BASE64 }}
+      TF_VAR_backend_listener_arn: ${{ secrets.BACKEND_LISTENER_ARN }}
+      TF_VAR_cors_allowed_origins: ${{ vars.CORS_ALLOWED_ORIGINS_JSON }}
+      TF_VAR_datadog_lambda_layer_arn: ${{ vars.DATADOG_LAMBDA_LAYER_ARN }}
+      TF_VAR_datadog_extension_layer_arn: ${{ vars.DATADOG_EXTENSION_LAYER_ARN }}
+      TF_VAR_datadog_api_key_secret_arn: ${{ secrets.DATADOG_API_KEY_SECRET_ARN }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run lint && npm run typecheck && npm test && npm run package
+      - name: Export artifact hash
+        run: echo "TF_VAR_source_code_hash=$(openssl dgst -sha256 -binary artifact/oficina-auth.zip | openssl base64 -A)" >> "$GITHUB_ENV"
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: 1.6.6 }
+      - name: Plan
+        working-directory: infra
+        run: terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" -backend-config="key=auth/${{ inputs.environment }}/terraform.tfstate" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${{ secrets.TF_STATE_LOCK_TABLE }}" -backend-config="encrypt=true" && terraform plan -out=tfplan
+      - name: Apply
+        working-directory: infra
+        run: terraform apply -auto-approve tfplan
+      - name: Smoke test authentication endpoint
+        working-directory: infra
+        env:
+          SMOKE_TEST_CPF: ${{ secrets.SMOKE_TEST_CPF }}
+        run: |
+          ENDPOINT=$(terraform output -raw api_gateway_endpoint)
+          curl --fail --request POST "$ENDPOINT/auth/clientes" --header 'content-type: application/json' --data "{\"cpf\":\"$SMOKE_TEST_CPF\"}"
+          terraform output -json > deployment-outputs.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: auth-deployment-${{ inputs.environment }}-${{ github.sha }}
+          path: infra/deployment-outputs.json

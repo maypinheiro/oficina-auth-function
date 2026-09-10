@@ -14,8 +14,8 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -24,6 +24,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run test:coverage
       - run: npm run package
+      - run: npm audit --omit=dev --audit-level=critical
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.6
