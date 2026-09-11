@@ -57,7 +57,12 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       log("warn", "authentication_denied", { correlationId, durationMs: Date.now() - startedAt });
       return response(401, "Acesso nao autorizado", correlationId);
     }
-    log("error", "authentication_failed", { correlationId, durationMs: Date.now() - startedAt });
+    log("error", "authentication_failed", {
+      correlationId,
+      durationMs: Date.now() - startedAt,
+      errorType: error instanceof Error ? error.name : "UnknownError",
+      errorMessage: error instanceof Error ? error.message : "Erro desconhecido"
+    });
     return response(500, "Erro interno", correlationId);
   }
 };
