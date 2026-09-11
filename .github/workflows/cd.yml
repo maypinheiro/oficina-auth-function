@@ -73,10 +73,22 @@ jobs:
           curl --fail --silent --show-error --request POST "$ENDPOINT/auth/clientes" --header 'content-type: application/json' --data "{\"cpf\":\"$SMOKE_TEST_CPF\"}" --output /tmp/auth-response.json
           jq --exit-status '.token | type == "string" and length > 0' /tmp/auth-response.json >/dev/null
           echo "Authentication smoke test succeeded."
+          TOKEN=$(jq --raw-output '.token' /tmp/auth-response.json)
+          curl --fail --silent --show-error "$ENDPOINT/health" --output /tmp/health-response.json
+          curl --fail --silent --show-error "$ENDPOINT/clientes" --header "authorization: Bearer $TOKEN" --output /tmp/protected-response.json
+          jq --exit-status 'type == "array"' /tmp/protected-response.json >/dev/null
+          unset TOKEN
+          echo "Private integration and authorizer smoke tests succeeded."
           terraform output -json > deployment-outputs.json
-      - name: Authentication diagnostics
+      - name: Authentication and private integration diagnostics
         if: failure()
-        run: aws logs tail "/aws/lambda/oficina-auth-${{ inputs.environment }}-authenticate" --since 10m --format short
+        working-directory: infra
+        run: |
+          aws logs tail "/aws/lambda/oficina-auth-${{ inputs.environment }}-authenticate" --since 10m --format short
+          VPC_LINK_ID=$(terraform output -raw vpc_link_id)
+          aws apigatewayv2 get-vpc-link --vpc-link-id "$VPC_LINK_ID" --query '{Status:VpcLinkStatus,Message:VpcLinkStatusMessage,Subnets:SubnetIds,SecurityGroups:SecurityGroupIds}'
+          TARGET_GROUP_ARN=$(aws elbv2 describe-listeners --listener-arns "$TF_VAR_backend_listener_arn" --query 'Listeners[0].DefaultActions[0].TargetGroupArn' --output text)
+          aws elbv2 describe-target-health --target-group-arn "$TARGET_GROUP_ARN" --query 'TargetHealthDescriptions[].{Target:Target.Id,Port:Target.Port,State:TargetHealth.State,Reason:TargetHealth.Reason,Description:TargetHealth.Description}'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: auth-deployment-${{ inputs.environment }}-${{ github.sha }}
