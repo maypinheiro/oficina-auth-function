@@ -72,6 +72,9 @@ jobs:
           ENDPOINT=$(terraform output -raw api_gateway_endpoint)
           curl --fail --request POST "$ENDPOINT/auth/clientes" --header 'content-type: application/json' --data "{\"cpf\":\"$SMOKE_TEST_CPF\"}"
           terraform output -json > deployment-outputs.json
+      - name: Authentication diagnostics
+        if: failure()
+        run: aws logs tail "/aws/lambda/oficina-auth-${{ inputs.environment }}-authenticate" --since 10m --format short
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: auth-deployment-${{ inputs.environment }}-${{ github.sha }}
