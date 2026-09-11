@@ -20,8 +20,10 @@ async function buildUseCase(): Promise<AuthenticateClient> {
     getSecretJson<DatabaseSecret>(databaseSecretArn),
     getSecretJson<SigningSecret>(signingSecretArn)
   ]);
+  const databaseUrl = new URL(database.DATABASE_URL);
+  databaseUrl.searchParams.delete("sslmode");
   const pool = new Pool({
-    connectionString: database.DATABASE_URL,
+    connectionString: databaseUrl.toString(),
     max: 2,
     ssl: { ca: database.caPem, rejectUnauthorized: true }
   });
@@ -57,7 +59,12 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       log("warn", "authentication_denied", { correlationId, durationMs: Date.now() - startedAt });
       return response(401, "Acesso nao autorizado", correlationId);
     }
-    log("error", "authentication_failed", { correlationId, durationMs: Date.now() - startedAt });
+    log("error", "authentication_failed", {
+      correlationId,
+      durationMs: Date.now() - startedAt,
+      errorType: error instanceof Error ? error.name : "UnknownError",
+      errorMessage: error instanceof Error ? error.message : "Erro desconhecido"
+    });
     return response(500, "Erro interno", correlationId);
   }
 };
