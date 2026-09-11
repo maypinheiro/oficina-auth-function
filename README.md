@@ -69,7 +69,7 @@ Testes locais usam dependências simuladas e não exigem AWS. O pacote é gerado
 
 ## CI/CD
 
-CI valida código, cobertura, empacotamento e Terraform. O CD manual seleciona `hml` ou `prod`, executa `plan/apply` e testa emissão do JWT, `/health` e uma rota protegida. Rollback consiste em reaplicar um SHA conhecido; state nunca deve ser editado manualmente.
+CI valida código, cobertura, empacotamento e Terraform. Após sucesso em `homolog` ou `main`, `workflow_run` aciona automaticamente o CD em `hml` ou `prod`; o acionamento manual permanece como contingência e produção exige aprovação do Environment. O deploy executa `plan/apply` e testa emissão do JWT, `/health` e uma rota protegida. Rollback consiste em reaplicar um SHA conhecido; state nunca deve ser editado manualmente.
 
 ### Como executar o deploy
 
