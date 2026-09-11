@@ -70,7 +70,9 @@ jobs:
           SMOKE_TEST_CPF: ${{ secrets.SMOKE_TEST_CPF }}
         run: |
           ENDPOINT=$(terraform output -raw api_gateway_endpoint)
-          curl --fail --request POST "$ENDPOINT/auth/clientes" --header 'content-type: application/json' --data "{\"cpf\":\"$SMOKE_TEST_CPF\"}"
+          curl --fail --silent --show-error --request POST "$ENDPOINT/auth/clientes" --header 'content-type: application/json' --data "{\"cpf\":\"$SMOKE_TEST_CPF\"}" --output /tmp/auth-response.json
+          jq --exit-status '.token | type == "string" and length > 0' /tmp/auth-response.json >/dev/null
+          echo "Authentication smoke test succeeded."
           terraform output -json > deployment-outputs.json
       - name: Authentication diagnostics
         if: failure()
