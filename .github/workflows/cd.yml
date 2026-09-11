@@ -49,6 +49,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
+      - name: Load JWT public key from Secrets Manager
+        run: |
+          PUBLIC_KEY_BASE64=$(aws secretsmanager get-secret-value --secret-id "oficina-${{ inputs.environment }}/auth/signing-public" --query SecretString --output text | jq -r '.JWT_PUBLIC_KEY_BASE64')
+          test -n "$PUBLIC_KEY_BASE64"
+          test "$PUBLIC_KEY_BASE64" != "null"
+          echo "::add-mask::$PUBLIC_KEY_BASE64"
+          echo "TF_VAR_jwt_public_key_base64=$PUBLIC_KEY_BASE64" >> "$GITHUB_ENV"
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with: { terraform_version: 1.6.6 }
       - name: Plan
