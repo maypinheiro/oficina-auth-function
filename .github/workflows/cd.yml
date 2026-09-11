@@ -1,6 +1,10 @@
 name: Deploy Functions and Gateway
 
 on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [homolog, main]
   workflow_dispatch:
     inputs:
       environment:
@@ -12,16 +16,20 @@ permissions:
   contents: read
 
 concurrency:
-  group: oficina-auth-${{ inputs.environment }}
+  group: oficina-auth-${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.event.workflow_run.head_branch == 'main' && 'prod' || 'hml') }}
   cancel-in-progress: false
 
 jobs:
   deploy:
-    environment: ${{ inputs.environment }}
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success')
+    environment:
+      name: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.event.workflow_run.head_branch == 'main' && 'prod' || 'hml') }}
     runs-on: ubuntu-latest
     env:
       AWS_REGION: us-east-1
-      TF_VAR_environment: ${{ inputs.environment }}
+      DEPLOY_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.event.workflow_run.head_branch == 'main' && 'prod' || 'hml') }}
+      DEPLOY_REF: ${{ github.event_name == 'workflow_dispatch' && github.sha || github.event.workflow_run.head_sha }}
+      TF_VAR_environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || (github.event.workflow_run.head_branch == 'main' && 'prod' || 'hml') }}
       TF_VAR_lambda_role_arn: arn:aws:iam::982623100545:role/LabRole
       TF_VAR_private_subnet_ids: ${{ secrets.PRIVATE_SUBNET_IDS_JSON }}
       TF_VAR_lambda_security_group_ids: ${{ secrets.LAMBDA_SECURITY_GROUP_IDS_JSON }}
@@ -37,6 +45,8 @@ jobs:
       TF_VAR_datadog_api_key_secret_arn: ${{ secrets.DATADOG_API_KEY_SECRET_ARN }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ env.DEPLOY_REF }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with: { node-version: 22, cache: npm }
       - run: npm ci
@@ -51,7 +61,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - name: Load JWT public key from Secrets Manager
         run: |
-          PUBLIC_KEY_BASE64=$(aws secretsmanager get-secret-value --secret-id "oficina-${{ inputs.environment }}/auth/signing-public" --query SecretString --output text | jq -r '.JWT_PUBLIC_KEY_BASE64')
+          PUBLIC_KEY_BASE64=$(aws secretsmanager get-secret-value --secret-id "oficina-${{ env.DEPLOY_ENV }}/auth/signing-public" --query SecretString --output text | jq -r '.JWT_PUBLIC_KEY_BASE64')
           test -n "$PUBLIC_KEY_BASE64"
           test "$PUBLIC_KEY_BASE64" != "null"
           echo "::add-mask::$PUBLIC_KEY_BASE64"
@@ -60,7 +70,7 @@ jobs:
         with: { terraform_version: 1.6.6 }
       - name: Plan
         working-directory: infra
-        run: terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" -backend-config="key=auth/${{ inputs.environment }}/terraform.tfstate" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${{ secrets.TF_STATE_LOCK_TABLE }}" -backend-config="encrypt=true" && terraform plan -out=tfplan
+        run: terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" -backend-config="key=auth/${{ env.DEPLOY_ENV }}/terraform.tfstate" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${{ secrets.TF_STATE_LOCK_TABLE }}" -backend-config="encrypt=true" && terraform plan -out=tfplan
       - name: Apply
         working-directory: infra
         run: terraform apply -auto-approve tfplan
@@ -84,12 +94,12 @@ jobs:
         if: failure()
         working-directory: infra
         run: |
-          aws logs tail "/aws/lambda/oficina-auth-${{ inputs.environment }}-authenticate" --since 10m --format short
+          aws logs tail "/aws/lambda/oficina-auth-${{ env.DEPLOY_ENV }}-authenticate" --since 10m --format short
           VPC_LINK_ID=$(terraform output -raw vpc_link_id)
           aws apigatewayv2 get-vpc-link --vpc-link-id "$VPC_LINK_ID" --query '{Status:VpcLinkStatus,Message:VpcLinkStatusMessage,Subnets:SubnetIds,SecurityGroups:SecurityGroupIds}'
           TARGET_GROUP_ARN=$(aws elbv2 describe-listeners --listener-arns "$TF_VAR_backend_listener_arn" --query 'Listeners[0].DefaultActions[0].TargetGroupArn' --output text)
           aws elbv2 describe-target-health --target-group-arn "$TARGET_GROUP_ARN" --query 'TargetHealthDescriptions[].{Target:Target.Id,Port:Target.Port,State:TargetHealth.State,Reason:TargetHealth.Reason,Description:TargetHealth.Description}'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: auth-deployment-${{ inputs.environment }}-${{ github.sha }}
+          name: auth-deployment-${{ env.DEPLOY_ENV }}-${{ env.DEPLOY_REF }}
           path: infra/deployment-outputs.json

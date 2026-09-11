@@ -90,7 +90,7 @@ Logs são JSON e incluem evento, ambiente, duração, `correlationId` e identifi
 
 ## CI/CD e rollback
 
-CI executa lint, typecheck, testes, cobertura, empacotamento e validação Terraform. O CD manual por environment executa `plan`, `apply` e smoke tests reais de autenticação, `/health` e rota protegida. O JWT é mantido apenas em arquivo temporário do runner e nunca impresso.
+CI executa lint, typecheck, testes, cobertura, empacotamento e validação Terraform. O CD é automático após CI verde em `homolog`/`main`, deriva `hml`/`prod`, faz checkout do SHA validado e executa `plan`, `apply` e smoke tests reais. `workflow_dispatch` é a contingência; `prod` continua sujeito à aprovação do GitHub Environment. O JWT é mantido apenas em arquivo temporário do runner e nunca impresso.
 
 Rollback é feito reaplicando um commit conhecido. State Terraform não é editado manualmente. Mudança de contrato ou chave deve manter compatibilidade durante a transição.
 
