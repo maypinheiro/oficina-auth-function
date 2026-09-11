@@ -1,5 +1,9 @@
 locals { prefix = "oficina-auth-${var.environment}" }
 
+data "aws_secretsmanager_secret_version" "database" {
+  secret_id = var.database_secret_arn
+}
+
 resource "aws_cloudwatch_log_group" "authenticate" {
   name              = "/aws/lambda/${local.prefix}-authenticate"
   retention_in_days = var.environment == "prod" ? 14 : 3
@@ -24,6 +28,7 @@ resource "aws_lambda_function" "authenticate" {
   environment {
     variables = {
       DATABASE_SECRET_ARN        = var.database_secret_arn
+      DATABASE_SECRET_VERSION_ID = data.aws_secretsmanager_secret_version.database.version_id
       JWT_PRIVATE_KEY_SECRET_ARN = var.jwt_private_key_secret_arn
       JWT_ISSUER                 = "oficina-auth"
       JWT_AUDIENCE               = "oficina-api"
