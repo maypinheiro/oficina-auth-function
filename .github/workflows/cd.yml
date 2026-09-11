@@ -44,9 +44,9 @@ jobs:
       TF_VAR_datadog_extension_layer_arn: ${{ vars.DATADOG_EXTENSION_LAYER_ARN }}
       TF_VAR_datadog_api_key_secret_arn: ${{ secrets.DATADOG_API_KEY_SECRET_ARN }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5; NOSONAR - trusted push branches only
         with:
-          ref: ${{ env.DEPLOY_REF }} # NOSONAR - only successful push runs from homolog/main reach this job
+          ref: ${{ env.DEPLOY_REF }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with: { node-version: 22, cache: npm }
       - run: npm ci
