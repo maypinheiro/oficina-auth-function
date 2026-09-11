@@ -33,6 +33,8 @@ flowchart LR
 - [Arquitetura integrada da solução](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/entrega-tecnica.md)
 - [Matriz de rotas e permissões](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/matriz-rotas-permissoes.md)
 - [RFC de autenticação](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/rfc-003-autenticacao.md)
+- [Matriz completa de conformidade](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/matriz-conformidade.md)
+- [Catálogo de evidências](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/catalogo-evidencias.md)
 
 Repositórios relacionados: [API](https://github.com/maypinheiro/oficina-api), [Kubernetes](https://github.com/maypinheiro/oficina-k8s-infra) e [banco](https://github.com/maypinheiro/oficina-database-infra).
 
@@ -68,6 +70,16 @@ Testes locais usam dependências simuladas e não exigem AWS. O pacote é gerado
 ## CI/CD
 
 CI valida código, cobertura, empacotamento e Terraform. O CD manual seleciona `hml` ou `prod`, executa `plan/apply` e testa emissão do JWT, `/health` e uma rota protegida. Rollback consiste em reaplicar um SHA conhecido; state nunca deve ser editado manualmente.
+
+### Como executar o deploy
+
+1. Garanta que EKS/NLB, RDS e secrets do ambiente já foram provisionados.
+2. Abra **Actions → Deploy Functions and Gateway → Run workflow**.
+3. Selecione `hml` ou `prod` e acompanhe testes, pacote ZIP, Terraform plan/apply e smoke E2E.
+4. O smoke armazena o JWT somente em arquivo temporário mascarado e valida `/health` e `/clientes`.
+5. Baixe `auth-deployment-<env>-<sha>` para os outputs não sensíveis.
+
+O deploy está operacional, porém o disparo automático após CI de `homolog`/`main` ainda é uma lacuna registrada na [matriz de conformidade](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/matriz-conformidade.md).
 
 ## Ambiente validado
 

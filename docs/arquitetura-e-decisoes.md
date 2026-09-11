@@ -105,3 +105,18 @@ Rollback é feito reaplicando um commit conhecido. State Terraform não é edita
 ## Evidência validada
 
 Em homologação foi validado o caminho completo: emissão de JWT, Lambda Authorizer, API Gateway, VPC Link, NLB interno e `GET /clientes`. Execução: <https://github.com/maypinheiro/oficina-auth-function/actions/runs/34617351925>.
+
+## Rastreabilidade para avaliação
+
+| Requisito | Implementação |
+|---|---|
+| Validar CPF | `src/domain/cpf.ts` e `cpf.spec.ts` |
+| Consultar existência/status | `src/infrastructure/postgres-client-repository.ts` |
+| Emitir JWT | `src/infrastructure/jwt.ts` |
+| Function Serverless | `src/handlers/authenticate.ts` |
+| Proteger rotas | `src/handlers/authorize.ts` e `infra/api-gateway.tf` |
+| API Gateway/VPC Link | `infra/api-gateway.tf` |
+| Logs e correlação | `src/shared/logger.ts` |
+| CI/CD | `.github/workflows/ci.yml` e `cd.yml` |
+
+Matriz completa: <https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/matriz-conformidade.md>.
