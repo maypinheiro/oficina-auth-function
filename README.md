@@ -29,14 +29,21 @@ flowchart LR
 
 - [Arquitetura, objetivos, decisões e limitações](docs/arquitetura-e-decisoes.md)
 - [Governança do repositório](docs/governanca-repositorio.md)
-- [Documentação central da Fase 3](https://github.com/maypinheiro/oficina-api/tree/develop/docs/fase3)
-- [Arquitetura integrada da solução](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/entrega-tecnica.md)
-- [Matriz de rotas e permissões](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/matriz-rotas-permissoes.md)
-- [RFC de autenticação](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/rfc-003-autenticacao.md)
+- [Documentação central da Fase 3](https://github.com/maypinheiro/oficina-api/tree/main/docs/fase3)
+- [Arquitetura integrada da solução](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/entrega-tecnica.md)
+- [Matriz de rotas e permissões](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/matriz-rotas-permissoes.md)
+- [RFC de autenticação](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/rfc-003-autenticacao.md)
 - [Matriz completa de conformidade](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/matriz-conformidade.md)
 - [Catálogo de evidências](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/catalogo-evidencias.md)
+- [Entrega final e vídeo](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/entrega-final.md)
 
 Repositórios relacionados: [API](https://github.com/maypinheiro/oficina-api), [Kubernetes](https://github.com/maypinheiro/oficina-k8s-infra) e [banco](https://github.com/maypinheiro/oficina-database-infra).
+
+### API publicada e Swagger
+
+- Swagger/OpenAPI compartilhado: <https://9o7vnq3io0.execute-api.us-east-1.amazonaws.com/docs/>
+- URL base do API Gateway: <https://9o7vnq3io0.execute-api.us-east-1.amazonaws.com>
+- Contrato de autenticação: `POST /auth/clientes`
 
 ## Contrato principal
 
@@ -79,7 +86,7 @@ CI valida código, cobertura, empacotamento e Terraform. Após sucesso em `homol
 4. O smoke armazena o JWT somente em arquivo temporário mascarado e valida `/health` e `/clientes`.
 5. Baixe `auth-deployment-<env>-<sha>` para os outputs não sensíveis.
 
-O deploy está operacional, porém o disparo automático após CI de `homolog`/`main` ainda é uma lacuna registrada na [matriz de conformidade](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/matriz-conformidade.md).
+O deploy automático por `workflow_run` está operacional em `homolog` e `main`; `workflow_dispatch` permanece apenas como contingência.
 
 ## Ambiente validado
 
