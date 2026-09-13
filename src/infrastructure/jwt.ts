@@ -33,3 +33,11 @@ export async function verifyClientToken(token: string, publicKeyPem: string, iss
   if (typeof payload === "string" || payload.scope !== "cliente" || !payload.sub) throw new Error("Escopo invalido");
   return { clientId: payload.sub, scope: "cliente" };
 }
+
+export function verifyAdminToken(token: string, secret: string) {
+  const payload = jwt.verify(token, secret, { algorithms: ["HS256"] });
+  if (typeof payload === "string" || payload.role !== "admin" || !payload.sub) {
+    throw new Error("Identidade administrativa invalida");
+  }
+  return { clientId: payload.sub, scope: "admin" };
+}
