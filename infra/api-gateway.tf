@@ -73,8 +73,9 @@ resource "aws_apigatewayv2_route" "health" {
 
 # Temporario durante a migracao para identidades individuais no Cognito.
 resource "aws_apigatewayv2_route" "legacy_admin_auth" {
+  for_each           = toset(["POST /auth", "POST /auth/login"])
   api_id             = aws_apigatewayv2_api.gateway.id
-  route_key          = "POST /auth"
+  route_key          = each.value
   authorization_type = "NONE"
   target             = "integrations/${aws_apigatewayv2_integration.backend.id}"
 }
