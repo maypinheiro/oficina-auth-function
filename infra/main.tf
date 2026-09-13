@@ -67,6 +67,7 @@ resource "aws_lambda_function" "authorize" {
       JWT_PUBLIC_KEY_BASE64   = var.jwt_public_key_base64
       JWT_ISSUER              = "oficina-auth"
       JWT_AUDIENCE            = "oficina-api"
+      ADMIN_AUTH_SECRET_ID     = "oficina-${var.environment}/api/admin-auth"
       DD_SERVICE              = "oficina-authorizer"
       DD_ENV                  = var.environment
       DD_VERSION              = coalesce(var.source_code_hash, "unknown")
