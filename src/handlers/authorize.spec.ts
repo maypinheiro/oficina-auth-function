@@ -3,6 +3,10 @@ import jwt from "jsonwebtoken";
 
 import { handler } from "./authorize";
 
+jest.mock("../infrastructure/secrets", () => ({
+  getSecretJson: jest.fn().mockResolvedValue({ JWT_SECRET: "admin-secret" })
+}));
+
 const event = (authorization?: string) => ({
   version: "2.0",
   type: "REQUEST",
@@ -26,6 +30,7 @@ describe("Lambda Authorizer", () => {
     process.env.JWT_PUBLIC_KEY_BASE64 = Buffer.from(publicKey.export({ type: "spki", format: "pem" })).toString("base64");
     process.env.JWT_ISSUER = "oficina-auth";
     process.env.JWT_AUDIENCE = "oficina-api";
+    process.env.ADMIN_AUTH_SECRET_ID = "oficina-test/api/admin-auth";
   });
 
   it("nega quando não há bearer token", async () => {
@@ -39,6 +44,16 @@ describe("Lambda Authorizer", () => {
     await expect(handler(event(`Bearer ${token}`) as never)).resolves.toEqual({
       isAuthorized: true,
       context: { clientId: "cliente-1", scope: "cliente" }
+    });
+  });
+
+  it("autoriza token administrativo valido", async () => {
+    const token = jwt.sign({ role: "admin" }, "admin-secret", {
+      algorithm: "HS256", subject: "admin"
+    });
+    await expect(handler(event(`Bearer ${token}`) as never)).resolves.toEqual({
+      isAuthorized: true,
+      context: { clientId: "admin", scope: "admin" }
     });
   });
 
