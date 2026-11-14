@@ -36,13 +36,26 @@ flowchart LR
 - [Matriz completa de conformidade](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/matriz-conformidade.md)
 - [Catálogo de evidências](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/catalogo-evidencias.md)
 - [Entrega final e vídeo](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/entrega-final.md)
+- [Arquitetura final da Fase 4](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/arquitetura-alvo.md)
+- [Saga distribuída e compensações](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/saga-orquestrada.md)
+- [Matriz de conformidade da Fase 4](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/matriz-conformidade.md)
+- [Catálogo de evidências da Fase 4](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/catalogo-evidencias.md)
 
-Repositórios relacionados: [API](https://github.com/maypinheiro/oficina-api), [Kubernetes](https://github.com/maypinheiro/oficina-k8s-infra) e [banco](https://github.com/maypinheiro/oficina-database-infra).
+Repositórios relacionados: [OS Service](https://github.com/maypinheiro/oficina-api),
+[Billing Service](https://github.com/maypinheiro/oficina-billing-service),
+[Execution Service](https://github.com/maypinheiro/oficina-execution-service),
+[Kubernetes](https://github.com/maypinheiro/oficina-k8s-infra) e
+[banco do OS](https://github.com/maypinheiro/oficina-database-infra).
+
+Na Fase 4, este repositório é um componente de apoio e não é contabilizado como
+um dos três microsserviços de negócio. Sua responsabilidade permanece na borda:
+autenticar, autorizar e encaminhar chamadas para o OS Service; a comunicação da
+Saga ocorre entre OS, Billing e Execution por SNS/SQS.
 
 ### API publicada e Swagger
 
-- Swagger/OpenAPI compartilhado: <https://9o7vnq3io0.execute-api.us-east-1.amazonaws.com/docs/>
-- URL base do API Gateway: <https://9o7vnq3io0.execute-api.us-east-1.amazonaws.com>
+- Swagger/OpenAPI compartilhado: <https://1stuihvf8d.execute-api.us-east-1.amazonaws.com/docs/>
+- URL base do API Gateway: <https://1stuihvf8d.execute-api.us-east-1.amazonaws.com>
 - Contrato de autenticação: `POST /auth/clientes`
 
 ## Contrato principal
@@ -90,10 +103,10 @@ O deploy automático por `workflow_run` está operacional em `homolog` e `main`;
 
 ## Ambiente validado
 
-- Conta acadêmica: `982623100545`;
+- Conta acadêmica atual: `533267045718` (contas anteriores do Learner Lab foram encerradas);
 - região: `us-east-1`;
-- homologação: <https://9o7vnq3io0.execute-api.us-east-1.amazonaws.com>;
-- Swagger: <https://9o7vnq3io0.execute-api.us-east-1.amazonaws.com/docs>;
+- homologação: <https://1stuihvf8d.execute-api.us-east-1.amazonaws.com>;
+- Swagger: <https://1stuihvf8d.execute-api.us-east-1.amazonaws.com/docs/>;
 - evidência E2E: <https://github.com/maypinheiro/oficina-auth-function/actions/runs/34617351925>.
 
 O endpoint depende de uma sessão ativa do AWS Academy Learner Lab. Credenciais temporárias precisam ser renovadas nos GitHub Environments a cada sessão. Cognito é evolução recomendada para funcionários, não componente implantado nesta entrega.
