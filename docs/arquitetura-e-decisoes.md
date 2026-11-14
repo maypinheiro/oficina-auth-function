@@ -96,7 +96,8 @@ Rollback é feito reaplicando um commit conhecido. State Terraform não é edita
 
 ## Limitações do AWS Academy
 
-- Conta única `982623100545`, região `us-east-1`.
+- Conta acadêmica atual `533267045718`, região `us-east-1`; contas anteriores
+  do Learner Lab foram encerradas e seus recursos não são reutilizados.
 - Credenciais STS expiram ao final da sessão do Learner Lab.
 - GitHub Environments precisam ser atualizados a cada nova sessão.
 - OIDC e criação de roles dedicadas podem ser bloqueados; a entrega usa `LabRole` e credenciais temporárias como contingência acadêmica.
@@ -120,3 +121,13 @@ Em homologação foi validado o caminho completo: emissão de JWT, Lambda Author
 | CI/CD | `.github/workflows/ci.yml` e `cd.yml` |
 
 Matriz completa: <https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/matriz-conformidade.md>.
+
+## Papel na arquitetura da Fase 4
+
+Auth Function, API Gateway, VPC Link e NLB formam a borda de identidade e
+entrada, mas não contam como microsserviço de negócio. O Gateway encaminha a API
+pública ao OS Service; Billing e Execution permanecem participantes internos da
+Saga. A divisão e a comunicação estão documentadas na
+[arquitetura final](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/arquitetura-alvo.md)
+e a cobertura requisito a requisito na
+[matriz da Fase 4](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/matriz-conformidade.md).
